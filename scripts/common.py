@@ -19,6 +19,8 @@ CARDIO_CSV = DATA / "cardio" / "activities.csv"
 NUTRITION_CSV = DATA / "nutrition" / "daily.csv"
 MEALS_CSV = DATA / "nutrition" / "meals.csv"
 MOOD_CSV = DATA / "wellbeing" / "mood.csv"
+BODY_COMP_CSV = DATA / "body-composition.csv"
+TARGETS_JSON = PRIVATE / "profile" / "targets.json"
 ENV_FILE = ROOT / ".env"
 
 

@@ -11,7 +11,9 @@ from collections import defaultdict
 from datetime import date, timedelta
 from pathlib import Path
 
-from common import CARDIO_CSV, MOOD_CSV, NUTRITION_CSV, SETS_CSV, WEIGHT_CSV, read_csv, require_private, to_float
+from common import (BODY_COMP_CSV, CARDIO_CSV, MOOD_CSV, NUTRITION_CSV, SETS_CSV, WEIGHT_CSV, read_csv,
+                    require_private, to_float)
+from race_fitness import KM_PER_MILE, RACES, best_effort, fmt_time, load_targets, race_time, vdot
 
 
 def in_range(rows, start, end):
@@ -139,6 +141,79 @@ def mood_section(start, end):
     return out + [""]
 
 
+def mark(ok):
+    return "✓" if ok else "✗"
+
+
+def targets_section(start, end):
+    """Progress against private/profile/targets.json, week by week."""
+    t = load_targets()
+    if not t:
+        return []
+    out = ["## Targets", ""]
+
+    # Weekly compliance: run miles, strength sessions, protein.
+    runs = [r for r in read_csv(CARDIO_CSV) if r["type"].endswith("Run")]
+    sets = read_csv(SETS_CSV)
+    food = read_csv(NUTRITION_CSV)
+    lo_mi, hi_mi = t.get("run_miles_per_week", (None, None))
+    min_lift = t.get("strength_sessions_per_week_min")
+    lo_p, hi_p = t.get("protein_g_per_day", (None, None))
+    out += ["| Week | Run miles | Strength sessions | Avg protein (logged days) |", "|---|---|---|---|"]
+    week_start = start - timedelta(days=start.weekday())
+    while week_start <= end:
+        week_end = week_start + timedelta(days=6)
+        miles = sum(to_float(r["distance_km"]) or 0 for r in in_range(runs, week_start, week_end)) / KM_PER_MILE
+        lifts = len({(r["date"], r["start_time"]) for r in in_range(sets, week_start, week_end)})
+        prot = mean(to_float(r["protein_g"]) for r in in_range(food, week_start, week_end))
+        partial = " (partial)" if week_end > end else ""
+        cells = [f"{week_start.isoformat()}{partial}",
+                 f"{miles:.1f} {mark(lo_mi <= miles <= hi_mi)}" if lo_mi is not None else f"{miles:.1f}",
+                 f"{lifts} {mark(lifts >= min_lift)}" if min_lift else str(lifts),
+                 (f"{prot:.0f} g {mark(lo_p <= prot)}" if lo_p else f"{prot:.0f} g") if prot else "—"]
+        out.append("| " + " | ".join(cells) + " |")
+        week_start += timedelta(days=7)
+    out.append("")
+
+    # Rate of weight loss on 7-day averages.
+    weights = read_csv(WEIGHT_CSV)
+    cur = mean(to_float(r["weight_kg"]) for r in in_range(weights, end - timedelta(days=6), end))
+    prev = mean(to_float(r["weight_kg"]) for r in in_range(weights, end - timedelta(days=13), end - timedelta(days=7)))
+    band = t.get("weekly_loss_pct_of_bodyweight")
+    if cur and prev and band:
+        loss_pct = (prev - cur) / prev * 100
+        verdict = "on target" if band[0] <= loss_pct <= band[1] else ("too fast — muscle at risk" if loss_pct > band[1] else "slower than target")
+        out.append(f"- Weight loss rate: {loss_pct:.2f}% of body weight/week (target {band[0]}–{band[1]}%) — {verdict}")
+
+    # Body fat projection from the last DEXA, assuming fat-free mass is unchanged.
+    dexa = [r for r in read_csv(BODY_COMP_CSV) if r.get("method") == "DEXA" and date.fromisoformat(r["date"]) <= end]
+    goal_bf = t.get("body_fat_pct_dexa_max")
+    if dexa and cur and goal_bf:
+        d = dexa[-1]
+        ffm = (to_float(d["lean_mass_kg"]) or 0) + (to_float(d["bone_mass_kg"]) or 0)
+        est = (1 - ffm / cur) * 100
+        goal_w = ffm / (1 - goal_bf / 100)
+        out.append(f"- Body fat if lean mass held since DEXA {d['date']}: ~{est:.1f}% (goal < {goal_bf:g}%). "
+                   f"Goal weight at that lean mass: {goal_w:.1f} kg ({cur - goal_w:.1f} kg to go). "
+                   "Confirm with the next DEXA.")
+
+    # Running fitness.
+    goal_hm = t.get("half_marathon_minutes_max")
+    found = best_effort(90, end)
+    if goal_hm and found:
+        vd, r = found
+        out.append(f"- Running: best effort in 90 days ({r['date']}, {r['distance_km']} km) → VDOT ≈ {vd:.1f}, "
+                   f"half marathon ≈ {fmt_time(race_time(vd, RACES['Half marathon']))}; "
+                   f"target {fmt_time(goal_hm)} needs VDOT ≈ {vdot(RACES['Half marathon'], goal_hm):.1f}.")
+
+    # Sleep.
+    sleep_min = t.get("sleep_hours_min")
+    sleep = mean(to_float(r["sleep_hours"]) for r in in_range(read_csv(MOOD_CSV), start, end))
+    if sleep_min and sleep:
+        out.append(f"- Sleep: {sleep:.1f} h average {mark(sleep >= sleep_min)} (target {sleep_min}+ h)")
+    return out + [""]
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--days", type=int, default=7)
@@ -150,7 +225,8 @@ def main():
     end = date.fromisoformat(args.end)
     start = end - timedelta(days=args.days - 1)
     lines = [f"# Training data: {start} → {end} ({args.days} days)", ""]
-    for section in (weight_section, strength_section, cardio_section, nutrition_section, mood_section):
+    for section in (targets_section, weight_section, strength_section, cardio_section, nutrition_section,
+                    mood_section):
         lines += section(start, end)
     report = "\n".join(lines)
     print(report)

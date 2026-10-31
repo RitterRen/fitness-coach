@@ -63,10 +63,12 @@ scripts/                    Stdlib-only Python helpers
 scripts/samples/            Example Xunji exports for testing the importer
 template/                   Empty skeleton of the private data repo
 private/                    Your private data repo (git-ignored here)
-  profile/                    Stats, medical history, goals
+  profile/                    Stats, medical history, goals, targets.json
   plan/program.md             Current training block
   plan/routines/              One file per routine, per location/equipment set
   data/body-weight.csv        Daily weigh-ins
+  data/body-composition.csv   DEXA and smart-scale scans
+  records/                    Original scan reports (PDF)
   data/strength/sets.csv      Normalised strength log (from Xunji)
   data/cardio/activities.csv  Runs and other cardio (from Strava)
   data/nutrition/meals.csv    Every food item (from Muse)
@@ -90,7 +92,8 @@ private/                    Your private data repo (git-ignored here)
    If you already have a data repo, clone it instead:
    `gh repo clone <you>/fitness-data private`. To keep it somewhere else, set
    `FITNESS_DATA_DIR`.
-2. Fill in `private/profile/athlete.md`, `medical-history.md` and `goals.md`.
+2. Fill in `private/profile/athlete.md`, `medical-history.md`, `goals.md` and
+   the numbers in `targets.json`.
 3. Open the repo in Claude Code and ask it to draft `private/plan/program.md`
    and your first routines with you.
 4. Strava (optional): create an API app at <https://www.strava.com/settings/api>
@@ -108,7 +111,8 @@ Python 3.9+ only; no packages to install.
 python3 scripts/log_weight.py 72.4              # log today's weight
 python3 scripts/import_xunji.py                 # import everything in private/inbox/xunji/
 python3 scripts/strava_sync.py                  # pull new Strava activities
-python3 scripts/weekly_report.py --days 28      # 28-day training ledger
+python3 scripts/weekly_report.py --days 28      # 28-day training ledger, checked against your targets
+python3 scripts/race_fitness.py                 # VDOT, race predictions, training paces
 ```
 
 ## Skills
@@ -124,6 +128,8 @@ automatically when you open the repo in Claude Code, either by name
 | `weekly-review` | End of week: 7- and 28-day summary, plan next week around your calendar |
 | `xunji-import` | You exported from Xunji, or the importer does not recognise a column |
 | `routine-builder` | New or changed routine for a location / equipment set, ready to copy into Xunji |
+| `goal-check` | "Am I on track?" — body fat (DEXA), race target, weekly lifts and miles, loss rate, protein, sleep |
+| `body-comp-import` | A new DEXA or smart-scale report: pull it from iCloud Drive, store it privately, log and compare it |
 
 ## Privacy
 

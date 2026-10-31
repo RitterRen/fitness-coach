@@ -12,7 +12,7 @@ My notes: $ARGUMENTS
    - If `private/inbox/xunji/` has files, run `python3 scripts/import_xunji.py` (see the `xunji-import` skill if it fails).
    - Run `python3 scripts/strava_sync.py` unless `.env` has no Strava keys.
 2. **Find today's session** in `private/data/strength/sets.csv` and/or `private/data/cardio/activities.csv`. Compare it with the routine in `private/plan/routines/` and with the previous time I did the same routine or workout.
-3. **Runs:** when splits or HR drift matter (intervals, tempo, long run), fetch per-second data with `python3 scripts/strava_sync.py --streams <strava_id>` and analyse rep-by-rep pace and HR recovery.
+3. **Runs:** check pace against the training paces from `python3 scripts/race_fitness.py` — most runs should be in the Easy range; say so when an "easy" run was really marathon pace or faster. When splits or HR drift matter (intervals, tempo, long run), fetch per-second data with `python3 scripts/strava_sync.py --streams <strava_id>` and analyse rep-by-rep pace and HR recovery.
 4. **Write** `private/reviews/sessions/<date>-<type>.md`:
    - Done vs prescribed (table)
    - What I reported

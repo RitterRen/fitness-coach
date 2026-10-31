@@ -1,5 +1,8 @@
 # Goals
 
+Put the numbers in `targets.json` too — the weekly report checks every week
+against them.
+
 ## Primary (this block)
 
 - e.g. Reach 70.0 kg body weight (7-day average) by 2027-02-01 while keeping strength.

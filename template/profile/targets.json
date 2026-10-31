@@ -1,0 +1,10 @@
+{
+  "body_fat_pct_dexa_max": 15.0,
+  "half_marathon_minutes_max": 120.0,
+  "strength_sessions_per_week_min": 3,
+  "run_miles_per_week": [10, 20],
+  "weekly_loss_pct_of_bodyweight": [0.5, 1.0],
+  "protein_g_per_day": [120, 150],
+  "calories_kcal_per_day": [2000, 2400],
+  "sleep_hours_min": 7
+}

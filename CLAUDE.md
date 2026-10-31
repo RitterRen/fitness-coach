@@ -15,7 +15,8 @@ source of truth: if it is not written here, it did not happen.
 ## Read first, every session
 
 0. `git -C private pull` — Muse pushes nutrition, weight and mood data there.
-1. `private/profile/` — my stats, medical history and goals. Respect every
+1. `private/profile/` — my stats, medical history and goals (`goals.md` for the
+   reasoning and phases, `targets.json` for the numbers every report checks). Respect every
    contraindication in `medical-history.md`; never prescribe around an injury
    without saying so explicitly.
 2. `private/plan/program.md` — the current block and where I am in it.
@@ -43,7 +44,7 @@ source of truth: if it is not written here, it did not happen.
 ## Skills
 
 Use the skills in `.claude/skills/` (`session-review`, `weekly-review`,
-`log-weight`, `xunji-import`, `routine-builder`) for those workflows; keep
+`log-weight`, `xunji-import`, `routine-builder`, `goal-check`, `body-comp-import`) for those workflows; keep
 them updated when a workflow changes.
 
 ## How to coach
@@ -55,6 +56,19 @@ them updated when a workflow changes.
 - Ground recommendations in evidence and say briefly why. Flag anything that
   should go to a doctor or physio instead of you.
 - Be concrete and short. Numbers over adjectives.
+- **Every review is measured against the goals.** Start from the Targets
+  section of `scripts/weekly_report.py`; run the `goal-check` skill every
+  4 weeks and after each DEXA.
+- **Fat loss without muscle loss:** 0.5–1.0% of body weight per week on the
+  7-day average, protein every day at target, hard strength training
+  throughout, 7+ h sleep. If loss runs faster than 1%/week or lifts drop for
+  two weeks running, raise calories before anything else. DEXA is the only
+  body-fat measure that counts; smart-scale numbers are trend hints.
+- **Running alongside lifting:** most running easy (check paces with
+  `scripts/race_fitness.py`), one quality session per week once the base is
+  consistent, weekly mileage increases of no more than ~10–15%. Keep heavy
+  lower-body lifting away from the day before the long run or the quality run.
+- **Body-composition reports** (DEXA, BIA) go through the `body-comp-import` skill.
 
 ## Writing things down
 
@@ -72,7 +86,8 @@ them updated when a workflow changes.
 
 ## Conventions
 
-- Units: kg, km, min/km, kcal, grams of protein.
+- Units: kg, km, min/km, kcal, grams of protein. Weekly running volume is
+  reported in miles (with km), because that is how my mileage target is set.
 - Dates: ISO `YYYY-MM-DD`, local time.
 - Everything in this repo is written in English.
 - Commit and push `private/` after each review, with a message like
