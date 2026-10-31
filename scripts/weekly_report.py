@@ -99,11 +99,21 @@ def nutrition_section(start, end):
         return out + ["No nutrition data in this period.", ""]
     kcal = mean(to_float(r["calories_kcal"]) for r in rows)
     protein = mean(to_float(r["protein_g"]) for r in rows)
-    out.append(f"- Days logged: {len(rows)}")
+    days = (end - start).days + 1
+    estimated = sum(r["note"].lower().startswith("estimate") for r in rows)
+    incomplete = sum("incomplete" in r["note"].lower() for r in rows)
+    line = f"- Days logged: {len(rows)} of {days}"
+    if estimated:
+        line += f" · {estimated} estimated"
+    if incomplete:
+        line += f" · {incomplete} incomplete"
+    out.append(line)
     if kcal:
         out.append(f"- Average: {kcal:.0f} kcal")
     if protein:
         out.append(f"- Average protein: {protein:.0f} g")
+    if len(rows) < days or incomplete:
+        out.append("- ⚠ Averages cover logged days only; treat them as rough.")
     return out + [""]
 
 
